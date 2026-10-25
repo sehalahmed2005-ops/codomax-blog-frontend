@@ -4,8 +4,9 @@
   --ink: #14213d;
   --muted: #5b6b86;
   --line: #d9e0ea;
-  --accent: #0f766e;
-  --accent-dark: #0b5a54;
+  --text: #111827;
+  --accent: #111827;
+  --accent-dark: #374151;
   --warn: #b42318;
   --radius: 10px;
 }
@@ -16,8 +17,8 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--ink);
+  background: #e5e7eb;
+  color: var(--text);
   font-family: 'Source Serif 4', Georgia, serif;
   line-height: 1.65;
   min-height: 100vh;
