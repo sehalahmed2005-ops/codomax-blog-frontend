@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Inkwell – Blog</title>
+</head>
+<body>
+  <header class="site" id="site-header"></header>
+
+  <main>
+    <section class="hero">
+      <h1>Write it down. Share it.</h1>
+      <p>Inkwell is a simple place to publish what you are learning.</p>
+      <div id="cta"></div>
+    </section>
+
+    <h2>Latest posts</h2>
+    <div class="grid" id="posts"></div>
+    <dialog id="post-dialog"></dialog>
+  </main>
+
+  <footer>Inkwell · Codomax Frontend Internship Project</footer>
+
+  <script src="app.js"></script>
+  <script>
+    const u = Auth.user();
+
+    document.getElementById('cta').innerHTML = u
+      ? '<a class="btn" href="create-blog.html">Write a post</a>'
+      : '<a class="btn" href="register.html">Create account</a> <a class="btn ghost" href="login.html">Log in</a>';
+
+    document.getElementById('posts').innerHTML = Posts.all().map(p => postCard(p)).join('');
+
+    document.getElementById('posts').addEventListener('click', e => {
+      const id = e.target.dataset.read;
+      if (id) openPost(id);
+    });
+  </script>
+</body>
+</html>

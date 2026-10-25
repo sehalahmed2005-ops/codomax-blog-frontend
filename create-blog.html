@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Write – Inkwell</title>
+</head>
+<body>
+  <header class="site" id="site-header"></header>
+
+  <main>
+    <div class="form-box wide">
+      <h2 id="title-h">Write a post</h2>
+
+      <form id="f" novalidate>
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" maxlength="100">
+        </div>
+
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category">
+            <option>Web</option>
+            <option>JavaScript</option>
+            <option>Career</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="content">Content</label>
+          <textarea id="content"></textarea>
+        </div>
+
+        <p class="error" id="err" role="alert"></p>
+
+        <button type="submit" id="submit">Publish</button>
+        <a class="btn ghost" href="dashboard.html">Cancel</a>
+      </form>
+    </div>
+  </main>
+
+  <footer>Inkwell · Codomax Frontend Internship Project</footer>
+
+  <script src="app.js"></script>
+  <script>
+    Auth.require();
+
+    const $ = id => document.getElementById(id);
+    const u = Auth.user();
+    const editId = new URLSearchParams(location.search).get('id');
+    let existing = null;
+
+    if (editId) {
+      existing = Posts.get(editId);
+      if (!existing || existing.authorId !== u.id) {
+        location.href = 'dashboard.html';
+      } else {
+        $('title-h').textContent = 'Edit post';
+        $('submit').textContent = 'Save changes';
+        $('title').value = existing.title;
+        $('category').value = existing.category;
+        $('content').value = existing.content;
+      }
+    }
+
+    $('f').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const t = $('title').value.trim();
+      const c = $('content').value.trim();
+      const err = $('err');
+
+      if (!t) return err.textContent = 'Add a title.';
+      if (c.length < 20) return err.textContent = 'Write at least 20 characters.';
+
+      Posts.save({
+        id: existing ? existing.id : Date.now(),
+        title: t,
+        category: $('category').value,
+        content: c,
+        author: u.name,
+        authorId: u.id,
+        createdAt: existing ? existing.createdAt : Date.now()
+      });
+
+      location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>

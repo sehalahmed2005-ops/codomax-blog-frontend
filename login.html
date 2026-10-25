@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Log in – Inkwell</title>
+</head>
+<body>
+  <header class="site" id="site-header"></header>
+
+  <main>
+    <div class="form-box">
+      <h2>Log in</h2>
+
+      <form id="f" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password">
+        </div>
+
+        <p class="error" id="err" role="alert"></p>
+        <button type="submit">Log in</button>
+      </form>
+
+      <p>New here? <a href="register.html">Create an account</a></p>
+    </div>
+  </main>
+
+  <footer>Inkwell · Codomax Frontend Internship Project</footer>
+
+  <script src="app.js"></script>
+  <script>
+    if (Auth.user()) location.href = 'dashboard.html';
+
+    document.getElementById('f').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value.trim();
+      const pw = document.getElementById('password').value;
+      const err = document.getElementById('err');
+
+      if (!email || !pw) return err.textContent = 'Enter your email and password.';
+
+      const r = Auth.login(email, pw);
+      if (r) return err.textContent = r;
+
+      location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>

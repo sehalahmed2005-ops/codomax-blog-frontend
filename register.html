@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <title>Register – Inkwell</title>
+</head>
+<body>
+  <header class="site" id="site-header"></header>
+
+  <main>
+    <div class="form-box">
+      <h2>Create your account</h2>
+
+      <form id="f" novalidate>
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email">
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="new-password">
+        </div>
+
+        <div class="field">
+          <label for="confirm">Confirm password</label>
+          <input id="confirm" type="password" autocomplete="new-password">
+        </div>
+
+        <p class="error" id="err" role="alert"></p>
+        <button type="submit">Create account</button>
+      </form>
+
+      <p>Already registered? <a href="login.html">Log in</a></p>
+    </div>
+  </main>
+
+  <footer>Inkwell · Codomax Frontend Internship Project</footer>
+
+  <script src="app.js"></script>
+  <script>
+    if (Auth.user()) location.href = 'dashboard.html';
+
+    document.getElementById('f').addEventListener('submit', e => {
+      e.preventDefault();
+
+      const v = id => document.getElementById(id).value.trim();
+      const err = document.getElementById('err');
+
+      const name = v('name');
+      const email = v('email');
+      const pw = document.getElementById('password').value;
+      const cf = document.getElementById('confirm').value;
+
+      if (!name || !email || !pw) return err.textContent = 'Fill in all fields.';
+      if (!/^\S+@\S+\.\S+$/.test(email)) return err.textContent = 'Enter a valid email address.';
+      if (pw.length < 6) return err.textContent = 'Password must be at least 6 characters.';
+      if (pw !== cf) return err.textContent = 'Passwords do not match.';
+
+      const r = Auth.register(name, email, pw);
+      if (r) return err.textContent = r;
+
+      Auth.login(email, pw);
+      location.href = 'dashboard.html';
+    });
+  </script>
+</body>
+</html>
