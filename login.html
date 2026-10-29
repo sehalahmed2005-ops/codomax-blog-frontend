@@ -37,11 +37,11 @@
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-  <script src="app.js"></script>
+    <script src="app.js"></script>
   <script>
     if (Auth.user()) location.href = 'dashboard.html';
 
-    document.getElementById('f').addEventListener('submit', e => {
+    document.getElementById('f').addEventListener('submit', async e => {
       e.preventDefault();
 
       const email = document.getElementById('email').value.trim();
@@ -50,7 +50,9 @@
 
       if (!email || !pw) return err.textContent = 'Enter your email and password.';
 
-      const r = Auth.login(email, pw);
+      err.textContent = '';
+
+      const r = await Auth.login(email, pw);
       if (r) return err.textContent = r;
 
       location.href = 'dashboard.html';

@@ -25,11 +25,19 @@
         <div class="field">
           <label for="category">Category</label>
           <select id="category">
-            <option>Web</option>
-            <option>JavaScript</option>
-            <option>Career</option>
-            <option>Other</option>
-          </select>
+  <option>Story</option>
+  <option>Today's Task</option>
+  <option>Thoughts</option>
+  <option>Entertainment</option>
+  <option>Learning</option>
+  <option>Web</option>
+  <option>JavaScript</option>
+  <option>Python</option>
+  <option>Java</option>
+  <option>AI</option>
+  <option>Career</option>
+  <option>Other</option>
+</select>
         </div>
 
         <div class="field">
@@ -47,7 +55,7 @@
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-  <script src="app.js"></script>
+   <script src="app.js"></script>
   <script>
     Auth.require();
 
@@ -56,20 +64,21 @@
     const editId = new URLSearchParams(location.search).get('id');
     let existing = null;
 
-    if (editId) {
-      existing = Posts.get(editId);
+    (async () => {
+      if (!editId || !u) return;
+      existing = await Posts.get(editId);
       if (!existing || existing.authorId !== u.id) {
         location.href = 'dashboard.html';
-      } else {
-        $('title-h').textContent = 'Edit post';
-        $('submit').textContent = 'Save changes';
-        $('title').value = existing.title;
-        $('category').value = existing.category;
-        $('content').value = existing.content;
+        return;
       }
-    }
+      $('title-h').textContent = 'Edit post';
+      $('submit').textContent = 'Save changes';
+      $('title').value = existing.title;
+      $('category').value = existing.category;
+      $('content').value = existing.content;
+    })();
 
-    $('f').addEventListener('submit', e => {
+    $('f').addEventListener('submit', async e => {
       e.preventDefault();
 
       const t = $('title').value.trim();
@@ -79,15 +88,15 @@
       if (!t) return err.textContent = 'Add a title.';
       if (c.length < 20) return err.textContent = 'Write at least 20 characters.';
 
-      Posts.save({
-        id: existing ? existing.id : Date.now(),
+      err.textContent = '';
+
+      const r = await Posts.save({
+        id: existing ? existing.id : undefined,
         title: t,
         category: $('category').value,
-        content: c,
-        author: u.name,
-        authorId: u.id,
-        createdAt: existing ? existing.createdAt : Date.now()
+        content: c
       });
+      if (r) return err.textContent = r;
 
       location.href = 'dashboard.html';
     });

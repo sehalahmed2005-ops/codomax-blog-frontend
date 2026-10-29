@@ -1,8 +1,9 @@
-// Shared helpers. Data lives in localStorage until Module 02 adds the backend API.
+// Shared helpers. Data now comes from the Node.js/Express backend API.
+const API = 'http://localhost:5000/api';
+
 const KEYS = {
-  users: 'blog_users',
   session: 'blog_session',
-  posts: 'blog_posts'
+  token: 'blog_token'
 };
 
 const read = (k, d) => {
@@ -29,82 +30,106 @@ const fmtDate = ts => new Date(ts).toLocaleDateString('en-IN', {
   year: 'numeric'
 });
 
+/* ---------- API helper ---------- */
+async function api(path, method = 'GET', body) {
+  const token = localStorage.getItem(KEYS.token);
+  let res;
+  try {
+    res = await fetch(API + path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {})
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch {
+    throw new Error('Cannot reach the server. Is the backend running?');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Something went wrong');
+  return data;
+}
+
 /* ---------- Auth ---------- */
 const Auth = {
   user: () => read(KEYS.session, null),
 
-  register(name, email, password) {
-    const users = read(KEYS.users, []);
-    if (users.some(u => u.email === email)) {
-      return 'An account with this email already exists.';
+  // returns an error message, or null on success
+  async register(name, email, password) {
+    try {
+      await api('/auth/register', 'POST', { name, email, password });
+      return null;
+    } catch (e) {
+      return e.message;
     }
-    users.push({ id: Date.now(), name, email, password });
-    write(KEYS.users, users);
-    return null;
   },
 
-  login(email, password) {
-    const u = read(KEYS.users, []).find(u => u.email === email && u.password === password);
-    if (!u) return 'Email or password is incorrect.';
-    write(KEYS.session, { id: u.id, name: u.name, email: u.email });
-    return null;
+  async login(email, password) {
+    try {
+      const data = await api('/auth/login', 'POST', { email, password });
+      localStorage.setItem(KEYS.token, data.token);
+      write(KEYS.session, data.user);
+      return null;
+    } catch (e) {
+      return e.message;
+    }
   },
 
   logout() {
     localStorage.removeItem(KEYS.session);
+    localStorage.removeItem(KEYS.token);
     location.href = 'index.html';
   },
 
   require() {
-    if (!Auth.user()) location.href = 'login.html';
+    if (!Auth.user() || !localStorage.getItem(KEYS.token)) location.href = 'login.html';
   }
 };
 
 /* ---------- Posts ---------- */
 const Posts = {
-  all() {
-    let p = read(KEYS.posts, null);
-    if (!p) {
-      p = [
-        {
-          id: 1,
-          title: 'Getting started with HTML and CSS',
-          category: 'Web',
-          author: 'Codomax Team',
-          authorId: 0,
-          content: 'HTML gives a page its structure and CSS gives it style. Start with semantic tags like header, main and footer, then use flexbox and grid to lay things out.',
-          createdAt: Date.now() - 86400000 * 3
-        },
-        {
-          id: 2,
-          title: 'JavaScript basics every beginner needs',
-          category: 'JavaScript',
-          author: 'Codomax Team',
-          authorId: 0,
-          content: 'Learn variables, functions, arrays and the DOM first. Once you can read from a form and update the page, you are ready to build real apps.',
-          createdAt: Date.now() - 86400000 * 2
-        }
-      ];
-      write(KEYS.posts, p);
+  async all() {
+    try {
+      const list = await api('/blogs');
+      return list.sort((a, b) => b.createdAt - a.createdAt);
+    } catch (e) {
+      toast(e.message);
+      return [];
     }
-    return p.sort((a, b) => b.createdAt - a.createdAt);
   },
 
-  get: id => Posts.all().find(p => p.id === Number(id)),
-
-  save(post) {
-    const all = read(KEYS.posts, []);
-    const i = all.findIndex(p => p.id === post.id);
-    if (i >= 0) {
-      all[i] = post;
-    } else {
-      all.push(post);
+  async get(id) {
+    try {
+      return await api('/blogs/' + Number(id));
+    } catch {
+      return undefined;
     }
-    write(KEYS.posts, all);
   },
 
-  remove(id) {
-    write(KEYS.posts, read(KEYS.posts, []).filter(p => p.id !== Number(id)));
+  // creates or updates; returns an error message, or null on success
+  async save(post) {
+    try {
+      const data = { title: post.title, category: post.category, content: post.content };
+      const exists = post.id ? await Posts.get(post.id) : null;
+      if (exists) {
+        await api('/blogs/' + post.id, 'PUT', data);
+      } else {
+        await api('/blogs', 'POST', data);
+      }
+      return null;
+    } catch (e) {
+      return e.message;
+    }
+  },
+
+  async remove(id) {
+    try {
+      await api('/blogs/' + Number(id), 'DELETE');
+      return null;
+    } catch (e) {
+      return e.message;
+    }
   }
 };
 
@@ -162,8 +187,8 @@ function postCard(p, withActions = false) {
   </article>`;
 }
 
-function openPost(id) {
-  const p = Posts.get(id);
+async function openPost(id) {
+  const p = await Posts.get(id);
   if (!p) return;
 
   const d = document.getElementById('post-dialog');

@@ -26,7 +26,7 @@
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-  <script src="app.js"></script>
+   <script src="app.js"></script>
   <script>
     const u = Auth.user();
 
@@ -34,7 +34,12 @@
       ? '<a class="btn" href="create-blog.html">Write a post</a>'
       : '<a class="btn" href="register.html">Create account</a> <a class="btn ghost" href="login.html">Log in</a>';
 
-    document.getElementById('posts').innerHTML = Posts.all().map(p => postCard(p)).join('');
+    (async () => {
+      const posts = await Posts.all();
+      document.getElementById('posts').innerHTML = posts.length
+        ? posts.map(p => postCard(p)).join('')
+        : '<p>No posts yet.</p>';
+    })();
 
     document.getElementById('posts').addEventListener('click', e => {
       const id = e.target.dataset.read;

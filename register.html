@@ -47,11 +47,11 @@
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-  <script src="app.js"></script>
+    <script src="app.js"></script>
   <script>
     if (Auth.user()) location.href = 'dashboard.html';
 
-    document.getElementById('f').addEventListener('submit', e => {
+    document.getElementById('f').addEventListener('submit', async e => {
       e.preventDefault();
 
       const v = id => document.getElementById(id).value.trim();
@@ -67,10 +67,14 @@
       if (pw.length < 6) return err.textContent = 'Password must be at least 6 characters.';
       if (pw !== cf) return err.textContent = 'Passwords do not match.';
 
-      const r = Auth.register(name, email, pw);
+      err.textContent = '';
+
+      const r = await Auth.register(name, email, pw);
       if (r) return err.textContent = r;
 
-      Auth.login(email, pw);
+      const l = await Auth.login(email, pw);
+      if (l) return err.textContent = l;
+
       location.href = 'dashboard.html';
     });
   </script>

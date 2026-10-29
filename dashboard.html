@@ -32,27 +32,29 @@
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-  <script src="app.js"></script>
+    <script src="app.js"></script>
   <script>
     Auth.require();
     const u = Auth.user();
-    document.getElementById('hi').textContent = 'Welcome, ' + u.name;
+    if (u) document.getElementById('hi').textContent = 'Welcome, ' + u.name;
 
-    function draw() {
-      const mine = Posts.all().filter(p => p.authorId === u.id);
+    async function draw() {
+      const all = await Posts.all();
+      const mine = all.filter(p => p.authorId === u.id);
       document.getElementById('n-mine').textContent = mine.length;
-      document.getElementById('n-all').textContent = Posts.all().length;
+      document.getElementById('n-all').textContent = all.length;
       document.getElementById('mine').innerHTML = mine.length
         ? mine.map(p => postCard(p, true)).join('')
         : '<div class="empty">You have not published anything yet. <a href="create-blog.html">Write your first post</a>.</div>';
     }
-    draw();
+    if (u) draw();
 
-    document.getElementById('mine').addEventListener('click', e => {
+    document.getElementById('mine').addEventListener('click', async e => {
       if (e.target.dataset.read) openPost(e.target.dataset.read);
       if (e.target.dataset.del && confirm('Delete this post?')) {
-        Posts.remove(e.target.dataset.del);
-        draw();
+        const err = await Posts.remove(e.target.dataset.del);
+        if (err) return toast(err);
+        await draw();
         toast('Post deleted');
       }
     });
