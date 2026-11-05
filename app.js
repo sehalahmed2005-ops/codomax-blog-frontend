@@ -1,5 +1,8 @@
-// Shared helpers. Data now comes from the Node.js/Express backend API.
-const API = 'http://localhost:5000/api';
+// Shared helpers. Data comes from the Node.js/Express + MongoDB backend API.
+// Local testing uses localhost; when deployed, put your Render URL below (Module 06).
+const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+  ? 'http://localhost:5000/api'
+  : 'https://YOUR-RENDER-URL.onrender.com/api';
 
 const KEYS = {
   session: 'blog_session',
@@ -87,8 +90,9 @@ const Auth = {
   }
 };
 
-/* ---------- Posts ---------- */
+/* ---------- Posts (full CRUD) ---------- */
 const Posts = {
+  // READ: all blogs, newest first
   async all() {
     try {
       const list = await api('/blogs');
@@ -99,20 +103,31 @@ const Posts = {
     }
   },
 
+  // READ: only the logged-in user's blogs
+  async mine() {
+    try {
+      const list = await api('/blogs/mine');
+      return list.sort((a, b) => b.createdAt - a.createdAt);
+    } catch (e) {
+      toast(e.message);
+      return [];
+    }
+  },
+
+  // READ: one blog by id
   async get(id) {
     try {
-      return await api('/blogs/' + Number(id));
+      return await api('/blogs/' + id);
     } catch {
       return undefined;
     }
   },
 
-  // creates or updates; returns an error message, or null on success
+  // CREATE or UPDATE; returns an error message, or null on success
   async save(post) {
     try {
       const data = { title: post.title, category: post.category, content: post.content };
-      const exists = post.id ? await Posts.get(post.id) : null;
-      if (exists) {
+      if (post.id) {
         await api('/blogs/' + post.id, 'PUT', data);
       } else {
         await api('/blogs', 'POST', data);
@@ -123,15 +138,29 @@ const Posts = {
     }
   },
 
+  // DELETE; returns an error message, or null on success
   async remove(id) {
     try {
-      await api('/blogs/' + Number(id), 'DELETE');
+      await api('/blogs/' + id, 'DELETE');
       return null;
     } catch (e) {
       return e.message;
     }
   }
 };
+
+/* ---------- Search and category filter ---------- */
+function filterPosts(list, query = '', category = 'All') {
+  const q = query.trim().toLowerCase();
+  return list.filter(p => {
+    const matchCat = category === 'All' || p.category === category;
+    const matchText = !q ||
+      p.title.toLowerCase().includes(q) ||
+      p.content.toLowerCase().includes(q) ||
+      p.author.toLowerCase().includes(q);
+    return matchCat && matchText;
+  });
+}
 
 /* ---------- UI helpers ---------- */
 function toast(msg) {

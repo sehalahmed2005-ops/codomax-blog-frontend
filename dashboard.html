@@ -26,28 +26,71 @@
     </div>
 
     <h2>Your posts</h2>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 20px">
+      <input id="search" type="search" placeholder="Search your posts..."
+             style="flex:1;min-width:200px;padding:10px 12px;border:1px solid #c9ced6;border-radius:8px;font:inherit">
+      <select id="category"
+              style="padding:10px 12px;border:1px solid #c9ced6;border-radius:8px;font:inherit">
+        <option value="All">All categories</option>
+      </select>
+    </div>
+
     <div class="grid" id="mine"></div>
     <dialog id="post-dialog"></dialog>
   </main>
 
   <footer>Inkwell · Codomax Frontend Internship Project</footer>
 
-    <script src="app.js"></script>
+  <script src="app.js"></script>
   <script>
     Auth.require();
     const u = Auth.user();
     if (u) document.getElementById('hi').textContent = 'Welcome, ' + u.name;
 
-    async function draw() {
-      const all = await Posts.all();
-      const mine = all.filter(p => p.authorId === u.id);
-      document.getElementById('n-mine').textContent = mine.length;
-      document.getElementById('n-all').textContent = all.length;
-      document.getElementById('mine').innerHTML = mine.length
-        ? mine.map(p => postCard(p, true)).join('')
-        : '<div class="empty">You have not published anything yet. <a href="create-blog.html">Write your first post</a>.</div>';
+    let allPosts = [];
+    let minePosts = [];
+
+    function fillCategories() {
+      const sel = document.getElementById('category');
+      const current = sel.value;
+      const cats = [...new Set(minePosts.map(p => p.category))].sort();
+      sel.innerHTML = '<option value="All">All categories</option>' +
+        cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+      sel.value = cats.includes(current) ? current : 'All';
     }
+
+    function render() {
+      const query = document.getElementById('search').value;
+      const category = document.getElementById('category').value;
+      const shown = filterPosts(minePosts, query, category);
+
+      document.getElementById('n-mine').textContent = minePosts.length;
+      document.getElementById('n-all').textContent = allPosts.length;
+
+      let empty;
+      if (minePosts.length === 0) {
+        empty = '<div class="empty">You have not published anything yet. <a href="create-blog.html">Write your first post</a>.</div>';
+      } else {
+        empty = '<div class="empty">No posts match your search.</div>';
+      }
+
+      document.getElementById('mine').innerHTML = shown.length
+        ? shown.map(p => postCard(p, true)).join('')
+        : empty;
+    }
+
+    async function draw() {
+      allPosts = await Posts.all();
+      minePosts = allPosts.filter(p => p.authorId === u.id);
+      fillCategories();
+      render();
+    }
+
     if (u) draw();
+
+    document.getElementById('search').addEventListener('input', render);
+    document.getElementById('category').addEventListener('change', render);
 
     document.getElementById('mine').addEventListener('click', async e => {
       if (e.target.dataset.read) openPost(e.target.dataset.read);
