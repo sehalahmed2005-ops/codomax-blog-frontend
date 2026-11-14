@@ -50,6 +50,15 @@ async function api(path, method = 'GET', body) {
     throw new Error('Cannot reach the server. Is the backend running?');
   }
   const data = await res.json().catch(() => ({}));
+
+  // Token expired or invalid: clear the session and send the user to login
+  if (res.status === 401 && token && path !== '/auth/login') {
+    localStorage.removeItem(KEYS.session);
+    localStorage.removeItem(KEYS.token);
+    location.href = 'login.html';
+    throw new Error(data.message || 'Session expired, please log in again');
+  }
+
   if (!res.ok) throw new Error(data.message || 'Something went wrong');
   return data;
 }
@@ -76,6 +85,16 @@ const Auth = {
       return null;
     } catch (e) {
       return e.message;
+    }
+  },
+
+  // PROFILE: logged-in user's details from the server, or null on failure
+  async profile() {
+    try {
+      return await api('/auth/me');
+    } catch (e) {
+      toast(e.message);
+      return null;
     }
   },
 

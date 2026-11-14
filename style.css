@@ -185,6 +185,7 @@ button.small {
 .card p {
   margin: 0;
   color: #33425e;
+  overflow-wrap: anywhere;
 }
 
 .meta {
@@ -325,6 +326,7 @@ dialog::backdrop {
 
 dialog .body {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* Responsive and accessibility */

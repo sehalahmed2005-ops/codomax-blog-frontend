@@ -20,6 +20,14 @@
       <a class="btn" href="create-blog.html">Write a post</a>
     </div>
 
+    <section class="card" id="profile" style="margin-bottom:20px">
+      <h2 style="margin-top:0">Your profile</h2>
+      <p><b>Name:</b> <span id="p-name">Loading...</span></p>
+      <p><b>Email:</b> <span id="p-email">Loading...</span></p>
+      <p><b>Joined:</b> <span id="p-joined">Loading...</span></p>
+     <button class="small danger" id="profile-logout" style="width:140px !important;max-width:140px !important">Log out</button>
+    </section>
+
     <div class="stats">
       <div class="stat"><b id="n-mine">0</b>Your posts</div>
       <div class="stat"><b id="n-all">0</b>All posts</div>
@@ -44,6 +52,7 @@
 
   <script src="app.js"></script>
   <script>
+    // Protected page: redirects to login if there is no token
     Auth.require();
     const u = Auth.user();
     if (u) document.getElementById('hi').textContent = 'Welcome, ' + u.name;
@@ -80,15 +89,27 @@
         : empty;
     }
 
+    async function loadProfile() {
+      const me = await Auth.profile();
+      if (!me) return;
+      document.getElementById('p-name').textContent = me.name;
+      document.getElementById('p-email').textContent = me.email;
+      document.getElementById('p-joined').textContent = me.joinedAt ? fmtDate(me.joinedAt) : '-';
+    }
+
     async function draw() {
-      allPosts = await Posts.all();
-      minePosts = allPosts.filter(p => p.authorId === u.id);
+      // "mine" comes from the protected /api/blogs/mine route (server-side filter)
+      [allPosts, minePosts] = await Promise.all([Posts.all(), Posts.mine()]);
       fillCategories();
       render();
     }
 
-    if (u) draw();
+    if (u) {
+      loadProfile();
+      draw();
+    }
 
+    document.getElementById('profile-logout').addEventListener('click', () => Auth.logout());
     document.getElementById('search').addEventListener('input', render);
     document.getElementById('category').addEventListener('change', render);
 
