@@ -1,8 +1,8 @@
 // Shared helpers. Data comes from the Node.js/Express + MongoDB backend API.
-// Local testing uses localhost; when deployed, put your Render URL below (Module 06).
+// Local testing uses localhost; when deployed, the Render backend URL below is used.
 const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : 'https://YOUR-RENDER-URL.onrender.com/api';
+  : 'https://codomax-blog-backend-j0fa.onrender.com/api';
 
 const KEYS = {
   session: 'blog_session',
